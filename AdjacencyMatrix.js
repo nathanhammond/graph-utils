@@ -88,54 +88,54 @@ AdjacencyMatrix.prototype.isConnected = function(v1, v2) {
 
 /* Transformations return a new AdjacencyMatrix. */
 
-AdjacencyMatrix.prototype.unweighted = function() {
+AdjacencyMatrix.prototype.transform = function(callback) {
   var cardinality = this.getCardinality();
   var next = [];
 
-  for (var i = 0; i < cardinality; i++) {
+  for (var v1 = 0; v1 < cardinality; v1++) {
     next.push([]);
-    for (var j = 0; j < cardinality; j++) {
-      next[i].push(!!this.getEdge(i, j));
+    for (var v2 = 0; v2 < cardinality; v2++) {
+      next[v1].push(callback.call(this, v1, v2));
     }
   }
   return new AdjacencyMatrix(next);
 }
 
-AdjacencyMatrix.prototype.undirected = function() {
-  var cardinality = this.getCardinality();
-  var next = [];
+AdjacencyMatrix.prototype.unweighted = function() {
+  return this.transform(function (v1, v2) {
+    return this.isConnected(v1, v2);
+  });
+}
 
-  for (var i = 0; i < cardinality; i++) {
-    next.push([]);
-    for (var j = 0; j < cardinality; j++) {
-      next[i].push((this.isConnected(i, j) || this.isConnected(j, i)));
-    }
-  }
-  return new AdjacencyMatrix(next);
+AdjacencyMatrix.prototype.undirected = function() {
+  return this.transform(function (v1, v2) {
+    return (this.isConnected(v1, v2) || this.isConnected(v2, v1));
+  });
 }
 
 AdjacencyMatrix.prototype.toString = function() {
   var cardinality = this.getCardinality();
   var longest = 1;
 
+  var v1, v2;
   var next = [];
 
   if (this.isUnweighted()) {
-    for (var i = 0; i < cardinality; i++) {
+    for (v1 = 0; v1 < cardinality; v1++) {
       next.push([]);
-      for (var j = 0; j < cardinality; j++) {
-        next[i].push(this.isConnected(i, j) ? "1" : "_");
+      for (v2 = 0; v2 < cardinality; v2++) {
+        next[v1].push(this.isConnected(v1, v2) ? "1" : "_");
       }
-      next[i] = "[" + next[i].join(" ") + "]";
+      next[v1] = "[" + next[v1].join(" ") + "]";
     }
   }
 
   if (this.isWeighted()) {
     // Loop once to identify max edge string length.
     var edgeWeight;
-    for (var i = 0; i < cardinality; i++) {
-      for (var j = 0; j < cardinality; j++) {
-        edgeWeight = this.getEdge(i, j);
+    for (v1 = 0; v1 < cardinality; v1++) {
+      for (v2 = 0; v2 < cardinality; v2++) {
+        edgeWeight = this.getEdge(v1, v2);
         if (typeof edgeWeight === "number") {
           longest = Math.max(longest, edgeWeight.toString().length);
         }
@@ -143,17 +143,17 @@ AdjacencyMatrix.prototype.toString = function() {
     }
 
     var pad = new Array(longest + 1).join('_');
-    for (var i = 0; i < cardinality; i++) {
+    for (v1 = 0; v1 < cardinality; v1++) {
       next.push([]);
-      for (var j = 0; j < cardinality; j++) {
-        edgeWeight = this.getEdge(i, j);
+      for (v2 = 0; v2 < cardinality; v2++) {
+        edgeWeight = this.getEdge(v1, v2);
         if (edgeWeight !== false) {
-          next[i].push((pad + edgeWeight.toString()).slice(-longest));
+          next[v1].push((pad + edgeWeight.toString()).slice(-longest));
         } else {
-          next[i].push(pad);
+          next[v1].push(pad);
         }
       }
-      next[i] = "[" + next[i].join(" ") + "]";
+      next[v1] = "[" + next[v1].join(" ") + "]";
     }
   }
 
