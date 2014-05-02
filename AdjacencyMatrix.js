@@ -11,21 +11,21 @@ function AdjacencyMatrix(matrix) {
   var seenNumber = false;
   var seenTrue = false;
   var length = matrix.length;
-  for (var i = 0; i < length; i++) {
-    if (!matrix[i] instanceof Array) {
+  for (var v1 = 0; v1 < length; v1++) {
+    if (!matrix[v1] instanceof Array) {
       throw new TypeError('AdjacencyMatrix expects an Array of Arrays.');
     }
 
-    if (matrix[i].length !== length) {
+    if (matrix[v1].length !== length) {
       throw new RangeError('AdjacencyMatrix expects a Square Matrix.');
     }
 
-    for (var j = 0; j < length; j++) {
-      if (typeof matrix[i][j] !== "boolean" && typeof matrix[i][j] !== "number") {
+    for (var v2 = 0; v2 < length; v2++) {
+      if (typeof matrix[v1][v2] !== "boolean" && typeof matrix[v1][v2] !== "number") {
         throw new TypeError('Edge weights must be either boolean or numeric.');
       }
-      if (typeof matrix[i][j] === "number") { seenNumber = true; }
-      if (matrix[i][j] === true) { seenTrue = true; }
+      if (typeof matrix[v1][v2] === "number") { seenNumber = true; }
+      if (matrix[v1][v2] === true) { seenTrue = true; }
 
       if (seenNumber && seenTrue) {
         throw new TypeError('Mixed weighted and unweighted edges.');
