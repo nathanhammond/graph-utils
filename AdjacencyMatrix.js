@@ -25,7 +25,7 @@ function AdjacencyMatrix(matrix) {
         throw new TypeError('Edge weights must be either boolean or numeric.');
       }
       if (typeof matrix[i][j] === "number") { seenNumber = true; }
-      if (typeof matrix[i][j] === true) { seenTrue = true; }
+      if (matrix[i][j] === true) { seenTrue = true; }
 
       if (seenNumber && seenTrue) {
         throw new TypeError('Mixed weighted and unweighted edges.');
@@ -34,83 +34,127 @@ function AdjacencyMatrix(matrix) {
   }
 
   // You made it.
-  this.weighted = seenNumber;
-  this.unweighted = seenTrue;
-  this.matrix = matrix;
-}
-
-AdjacencyMatrix.prototype.isUnweighted = function() {
-  return this.unweighted;
+  this._weighted = seenNumber;
+  this._unweighted = seenTrue;
+  this._matrix = matrix;
+  this._cardinality = matrix.length;
 }
 
 AdjacencyMatrix.prototype.isWeighted = function() {
-  return this.weighted;
+  return this._weighted;
 }
 
-AdjacencyMatrix.prototype.isConnected = function(v1, v2) {
-  var length = this.matrix.length;
+AdjacencyMatrix.prototype.isUnweighted = function() {
+  return this._unweighted;
+}
 
-  if (v1 >= length || v2 >= length) {
-    return undefined;
+AdjacencyMatrix.prototype.getCardinality = function() {
+  return this._cardinality;
+}
+
+AdjacencyMatrix.prototype.isValidEdge = function(v1, v2) {
+  return (v1 < this.getCardinality() && v2 < this.getCardinality());
+}
+
+AdjacencyMatrix.prototype.getEdge = function(v1, v2) {
+  return this.isValidEdge(v1, v2) ? this._matrix[v1][v2] : undefined;
+}
+
+AdjacencyMatrix.prototype.setEdge = function(v1, v2, weight) {
+  if (!this.isValidEdge(v1, v2)) {
+    throw new RangeError('The supplied vertices do not exist.');
   }
-
-  return this.matrix[v1][v2] !== false;
-}
-
-AdjacencyMatrix.prototype.getWeight = function(v1, v2) {
-  if (this.isUnweighted()) {
-    throw new TypeError('May not get weight of unweighted edge.');
+  if (typeof weight !== "boolean" && typeof weight !== "number") {
+    throw new TypeError('Supplied weight must be either boolean or numeric.');
   }
-
-  return this.isConnected(v1, v2) ? this.matrix[v1][v2] : undefined;
-}
-
-AdjacencyMatrix.prototype.addEdge = function(v1, v2, weight) {
-  var length = this.matrix.length;
-  
-  if (this.isWeighted() && typeof weight !== "number") {
+  if (this.isWeighted() && (typeof weight !== "number" && weight !== false)) {
     throw new TypeError('Mixed weighted and unweighted edges.');
   }
-  if (this.isUnweighted() && weight !== true) {
+  if (this.isUnweighted() && typeof weight !== "boolean") {
     throw new TypeError('Mixed weighted and unweighted edges.');    
   }
 
-  this.matrix[v1][v2] = weight;
+  this._matrix[v1][v2] = weight;
   return true;
 }
 
 AdjacencyMatrix.prototype.removeEdge = function(v1, v2) {
-  if (this.isConnected(v1, v2)) {
-    this.matrix[v1][v2] = false;
-    return true;
-  } else {
-    return false;
+  return this.setEdge(v1, v2, false);
+}
+
+AdjacencyMatrix.prototype.isConnected = function(v1, v2) {
+  return !!this.getEdge(v1, v2);
+}
+
+/* Transformations return a new AdjacencyMatrix. */
+
+AdjacencyMatrix.prototype.unweighted = function() {
+  var cardinality = this.getCardinality();
+  var next = [];
+
+  for (var i = 0; i < cardinality; i++) {
+    next.push([]);
+    for (var j = 0; j < cardinality; j++) {
+      next[i].push(!!this.getWeight(i, j));
+    }
   }
+  return new AdjacencyMatrix(next);
 }
 
 AdjacencyMatrix.prototype.undirected = function() {
-  var length = this.matrix.length;
-  var next = this.unweighted().matrix;
+  var next = this.unweighted();
+  var cardinality = next.getCardinality();
 
-  for (var i = 0; i < length; i++) {
-    for (var j = 0; j < length; j++) {
+  for (var i = 0; i < cardinality; i++) {
+    for (var j = 0; j < cardinality; j++) {
       next[i][j] = next[i][j] || next[j][i];
     }
   }
   return new AdjacencyMatrix(next);
 }
 
-AdjacencyMatrix.prototype.unweighted = function() {
-  var length = this.matrix.length;
+AdjacencyMatrix.prototype.toString = function() {
+  var cardinality = this.getCardinality();
+  var longest = 1;
+
   var next = [];
 
-  for (var i = 0; i < length; i++) {
-    next.push([]);
-    for (var j = 0; j < length; j++) {
-      next[i].push(!!this.matrix[i][j]);
+  if (this.isUnweighted()) {
+    for (var i = 0; i < cardinality; i++) {
+      next.push([]);
+      for (var j = 0; j < cardinality; j++) {
+        next[i].push(this.isConnected(i, j) ? "1" : "_");
+      }
+      next[i] = "[" + next[i].join(" ") + "]";
     }
   }
-  return new AdjacencyMatrix(next);
-}
 
-AdjacencyMatrix.prototype.addVertex = function() {}
+  if (this.isWeighted()) {
+    // Loop once to identify max edge string length.
+    var edgeWeight;
+    for (var i = 0; i < cardinality; i++) {
+      for (var j = 0; j < cardinality; j++) {
+        edgeWeight = this.getEdge(i, j);
+        if (typeof edgeWeight === "number") {
+          longest = Math.max(longest, edgeWeight.toString().length);
+        }
+      }
+    }
+
+    var pad = new Array(longest + 1).join('_');
+    for (var i = 0; i < cardinality; i++) {
+      next.push([]);
+      for (var j = 0; j < cardinality; j++) {
+        edgeWeight = this.getEdge(i, j);
+        if (edgeWeight !== false) {
+          next[i].push((pad + edgeWeight.toString()).slice(-longest));
+        } else {
+          next[i].push(pad);
+        }
+      }
+      next[i] = "[" + next[i].join(" ") + "]";
+    }
+  }
+
+  return next.join("\n");
+}
