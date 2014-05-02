@@ -95,19 +95,20 @@ AdjacencyMatrix.prototype.unweighted = function() {
   for (var i = 0; i < cardinality; i++) {
     next.push([]);
     for (var j = 0; j < cardinality; j++) {
-      next[i].push(!!this.getWeight(i, j));
+      next[i].push(!!this.getEdge(i, j));
     }
   }
   return new AdjacencyMatrix(next);
 }
 
 AdjacencyMatrix.prototype.undirected = function() {
-  var next = this.unweighted();
-  var cardinality = next.getCardinality();
+  var cardinality = this.getCardinality();
+  var next = [];
 
   for (var i = 0; i < cardinality; i++) {
+    next.push([]);
     for (var j = 0; j < cardinality; j++) {
-      next[i][j] = next[i][j] || next[j][i];
+      next[i].push((this.isConnected(i, j) || this.isConnected(j, i)));
     }
   }
   return new AdjacencyMatrix(next);
