@@ -1,6 +1,7 @@
 function AdjacencyMatrix(matrix) {
   // You can create a new adjacency matrix without seeding it.
   matrix = matrix || [];
+  this._edgeCardinality = 0;
 
   // But if you try and seed it we're going to validate it to the Nth degree.
   if (!matrix instanceof Array) { 
@@ -23,7 +24,10 @@ function AdjacencyMatrix(matrix) {
     for (var v2 = 0; v2 < length; v2++) {
       if (typeof matrix[v1][v2] !== "boolean" && typeof matrix[v1][v2] !== "number") {
         throw new TypeError('Edge weights must be either boolean or numeric.');
+      } else {
+        this._edgeCardinality++;
       }
+
       if (typeof matrix[v1][v2] === "number") { seenNumber = true; }
       if (matrix[v1][v2] === true) { seenTrue = true; }
 
@@ -86,6 +90,23 @@ AdjacencyMatrix.prototype.isConnected = function(v1, v2) {
   return !!this.getEdge(v1, v2);
 }
 
+AdjacencyMatrix.prototype.isUndirected = function() {
+  var cardinality = this.getCardinality();
+
+  for (var v1 = 0; v1 < cardinality; v1++) {
+    for (var v2 = 0; v2 < cardinality && v2 < v1; v2++) {
+      if (this.getEdge(v1, v2) !== this.getEdge(v2, v1)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+AdjacencyMatrix.prototype.isDirected = function() {
+  return !this.isUndirected();
+}
+
 /* Transformations return a new AdjacencyMatrix. */
 
 AdjacencyMatrix.prototype.transform = function(callback) {
@@ -110,6 +131,12 @@ AdjacencyMatrix.prototype.unweighted = function() {
 AdjacencyMatrix.prototype.undirected = function() {
   return this.transform(function (v1, v2) {
     return (this.isConnected(v1, v2) || this.isConnected(v2, v1));
+  });
+}
+
+AdjacencyMatrix.prototype.deloop = function() {
+  return this.transform(function (v1, v2) {
+    return v1 === v2 ? false : this.getEdge(v1, v2);
   });
 }
 
