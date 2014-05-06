@@ -86,8 +86,20 @@ AdjacencyMatrix.prototype.removeEdge = function(v1, v2) {
   return this.setEdge(v1, v2, false);
 }
 
-AdjacencyMatrix.prototype.isConnected = function(v1, v2) {
-  return !!this.getEdge(v1, v2);
+AdjacencyMatrix.prototype.isConnected = function() {
+  
+}
+
+AdjacencyMatrix.prototype.isWeaklyConnected = function() {
+  
+}
+
+AdjacencyMatrix.prototype.isTree = function() {
+  var V = this.getCardinality();
+  var E = this.getEdgeCardinality();
+
+  // All trees have exactly one less edge than vertex.
+  if (V !== E - 1) { return false; }
 }
 
 AdjacencyMatrix.prototype.isUndirected = function() {
@@ -124,13 +136,13 @@ AdjacencyMatrix.prototype.transform = function(callback) {
 
 AdjacencyMatrix.prototype.unweighted = function() {
   return this.transform(function (v1, v2) {
-    return this.isConnected(v1, v2);
+    return !!this.getEdge(v1, v2);
   });
 }
 
 AdjacencyMatrix.prototype.undirected = function() {
   return this.transform(function (v1, v2) {
-    return (this.isConnected(v1, v2) || this.isConnected(v2, v1));
+    return (!!this.getEdge(v1, v2) || !!this.getEdge(v2, v1));
   });
 }
 
@@ -151,7 +163,7 @@ AdjacencyMatrix.prototype.toString = function() {
     for (v1 = 0; v1 < cardinality; v1++) {
       next.push([]);
       for (v2 = 0; v2 < cardinality; v2++) {
-        next[v1].push(this.isConnected(v1, v2) ? "1" : "_");
+        next[v1].push(!!this.getEdge(v1, v2) ? "1" : "_");
       }
       next[v1] = "[" + next[v1].join(" ") + "]";
     }
