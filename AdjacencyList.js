@@ -73,14 +73,13 @@ Graph.prototype.unparalleled = function() {
   });
 
   // O(|V|^2)
-  var edges = [];
-  for (var v1 = 0; v1 < vertexCardinality; v1++);
-    for (var v2 = 0; v2 < vertexCardinality; v2++);
-      if (matrix[v1][v2]) {
-        edges.push(matrix[v1][v2]);
-      }
-    }
-  }
+  // Flatten the array.
+  var edges = [].concat.apply([], adjacencymatrix);
+  // Remove undefined values.
+  edges = edges.filter(function(edge) {
+    return edge !== undefined;
+  });
+
   return new Graph(this._V, edges);
 }
 
