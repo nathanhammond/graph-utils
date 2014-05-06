@@ -49,7 +49,7 @@ Graph.prototype.unparalleled = function() {
 
   // O(|V|)
   for (var i = 0; i < vertexCardinality; i++) {
-    adjacencymatrix.push(new Array(vertexCardinality));
+    adjacencymatrix.push([]);
   }
 
   var handler = function(v1, v2) {
@@ -65,17 +65,17 @@ Graph.prototype.unparalleled = function() {
   // O(|E|)
   var this._E.forEach(function(edge, index) {
     if (edge._directed) {
-      handler(edge._v1._index, edge._v2._index)
+      handler(edge._v1._index, edge._v2._index);
     } else {
-      handler(edge._v1._index, edge._v2._index)
-      handler(edge._v2._index, edge._v1._index)      
+      handler(edge._v1._index, edge._v2._index);
+      handler(edge._v2._index, edge._v1._index);
     }
   });
 
-  // O(|V|^2)
-  // Flatten the array.
+  // Flatten the array. O(|V|)
   var edges = [].concat.apply([], adjacencymatrix);
-  // Remove undefined values.
+
+  // Remove undefined values. O(|V|^2), but better when sparse.
   edges = edges.filter(function(edge) {
     return edge !== undefined;
   });
