@@ -58,8 +58,20 @@ Graph.prototype.unparalleled = function() {
     var edgeatvertex = adjacencymatrix[edge._v1._index][edge._v2._index];
 
     // If so use the edge that minimizes the weight of the connection.
-    if (!edgeatvertex || edgeatvertex._weight >= edge._weight) {
+    if (!edgeatvertex || (typeof edgeatvertex._weight === "number" && edgeatvertex._weight >= edge._weight)) {
       adjacencymatrix[edge._v1._index][edge._v2._index] = edge;
+    }
+
+    // Once more, with feeling, in the event that this is undirected.
+    if (!edge._directed) {
+      // Find out if we've saved off an edge already.
+      edgeatvertex = adjacencymatrix[edge._v2._index][edge._v1._index];
+
+      // If so use the edge that minimizes the weight of the connection.
+      if (!edgeatvertex || (typeof edgeatvertex._weight === "number" && edgeatvertex._weight >= edge._weight)) {
+        adjacencymatrix[edge._v2._index][edge._v1._index] = edge;
+      }
+
     }
   });
 
