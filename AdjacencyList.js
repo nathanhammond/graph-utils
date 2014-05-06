@@ -52,26 +52,23 @@ Graph.prototype.unparalleled = function() {
     adjacencymatrix.push(new Array(vertexCardinality));
   }
 
-  // O(|E|)
-  var this._E.forEach(function(edge, index) {
+  var handler = function(v1, v2) {
     // Find out if we've saved off an edge already.
-    var edgeatvertex = adjacencymatrix[edge._v1._index][edge._v2._index];
+    var edgeatvertex = adjacencymatrix[v1][v2];
 
     // If so use the edge that minimizes the weight of the connection.
     if (!edgeatvertex || (typeof edgeatvertex._weight === "number" && edgeatvertex._weight >= edge._weight)) {
-      adjacencymatrix[edge._v1._index][edge._v2._index] = edge;
+      adjacencymatrix[v1][v2] = edge;
     }
+  }
 
-    // Once more, with feeling, in the event that this is undirected.
-    if (!edge._directed) {
-      // Find out if we've saved off an edge already.
-      edgeatvertex = adjacencymatrix[edge._v2._index][edge._v1._index];
-
-      // If so use the edge that minimizes the weight of the connection.
-      if (!edgeatvertex || (typeof edgeatvertex._weight === "number" && edgeatvertex._weight >= edge._weight)) {
-        adjacencymatrix[edge._v2._index][edge._v1._index] = edge;
-      }
-
+  // O(|E|)
+  var this._E.forEach(function(edge, index) {
+    if (edge._directed) {
+      handler(edge._v1._index, edge._v2._index)
+    } else {
+      handler(edge._v1._index, edge._v2._index)
+      handler(edge._v2._index, edge._v1._index)      
     }
   });
 
