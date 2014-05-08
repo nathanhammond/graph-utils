@@ -43,32 +43,36 @@ Graph.prototype.isPlanar = function() {}
 
 /* TRANSFORM THE GRAPH */
 Graph.prototype.unparalleled = function() {
-  // Convert to minimized weight, directed matrix.
+  // Remove all parallel edges from the graph.
   var vertexCardinality = this._V.length;
   var adjacencymatrix = [];
+  var isDirected = this.isDirected();
+  var isWeighted = this.isWeighted();
 
   // O(|V|)
   for (var i = 0; i < vertexCardinality; i++) {
     adjacencymatrix.push([]);
   }
 
-  var handler = function(v1, v2) {
+  var handler = function(edge, v1, v2) {
     // Find out if we've saved off an edge already.
     var edgeatvertex = adjacencymatrix[v1][v2];
 
     // If so use the edge that minimizes the weight of the connection.
-    if (!edgeatvertex || (typeof edgeatvertex._weight === "number" && edgeatvertex._weight >= edge._weight)) {
+    if (!edgeatvertex || (isWeighted && edgeatvertex._weight >= edge._weight)) {
       adjacencymatrix[v1][v2] = edge;
     }
   }
 
   // O(|E|)
-  var this._E.forEach(function(edge, index) {
-    if (edge._directed) {
-      handler(edge._v1._index, edge._v2._index);
-    } else {
-      handler(edge._v1._index, edge._v2._index);
-      handler(edge._v2._index, edge._v1._index);
+  this._E.forEach(function(edge, index) {
+    if (isDirected && edge._directed) {
+      handler(edge, edge._v1._index, edge._v2._index);
+    } else if (isDirected && !edge._directed) {
+      throw new Error('Undirected edge in a directed graph.');
+    } else if (!isDirected) {
+      // Only use half of the adjacency matrix.
+      handler(edge, Math.max(edge._v1._index, edge._v2._index), Math.min(edge._v1._index, edge._v2._index));
     }
   });
 
