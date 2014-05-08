@@ -50,7 +50,7 @@ Graph.prototype.hasParallels = function() {
     adjacencymatrix.push([]);
   }
 
-  this._E.some(function(edge) {
+  return this._E.some(function(edge) {
     var v1 = edge._v1._index;
     var v2 = edge._v2._index;
     var result;
