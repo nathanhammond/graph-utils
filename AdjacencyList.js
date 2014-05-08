@@ -35,11 +35,43 @@ Graph.prototype.isDirected = function() {
   });
 }
 
+Graph.prototype.hasLoops = function() {
+  return this._E.some(function(edge) {
+    return edge._v1 !== edge._v2;
+  });
+}
+Graph.prototype.hasParallels = function() {
+  var vertexCardinality = this._V.length;
+  var adjacencymatrix = [];
+  var isDirected = this.isDirected();
+
+  // O(|V|)
+  for (var i = 0; i < vertexCardinality; i++) {
+    adjacencymatrix.push([]);
+  }
+
+  this._E.some(function(edge) {
+    var v1 = edge._v1._index;
+    var v2 = edge._v2._index;
+    var result;
+
+    if (isDirected) {
+      result = adjacencymatrix[v1][v2];
+      adjacencymatrix[v1][v2] = true;
+    } else {
+      result = adjacencymatrix[Math.max(v1,v2)][Math.min(v1,v2)];
+      adjacencymatrix[Math.max(v1,v2)][Math.min(v1,v2)] = true;
+    }
+
+    return !!result;
+  });
+}
+
 Graph.prototype.isConnected = function() {}
 Graph.prototype.isWeaklyConnected = function() {}
 Graph.prototype.isTree = function() {}
-Graph.prototype.hasLoops = function() {}
 Graph.prototype.isPlanar = function() {}
+
 
 /* TRANSFORM THE GRAPH */
 Graph.prototype.unparalleled = function() {
@@ -65,7 +97,7 @@ Graph.prototype.unparalleled = function() {
   }
 
   // O(|E|)
-  this._E.forEach(function(edge, index) {
+  this._E.forEach(function(edge) {
     if (isDirected && edge._directed) {
       handler(edge, edge._v1._index, edge._v2._index);
     } else if (isDirected && !edge._directed) {
