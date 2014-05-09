@@ -5,8 +5,8 @@ function Vertex(name) {
 function Edge(edge) {
   this._v1 = edge.v1;
   this._v2 = edge.v2;
-  this._weight = edge.weight;
-  this._directed = edge.directed;
+  this._weight = edge.weight || true;
+  this._directed = edge.directed || false;
 }
 
 function Graph(vertices, edges) {
@@ -25,7 +25,7 @@ Graph.prototype.remove = function() {}
 /* INSPECT THE GRAPH */
 Graph.prototype.isWeighted = function() {
   return this._E.some(function(edge) {
-    return typeof edge._weight !== "number";
+    return typeof edge._weight === "number";
   });
 }
 
@@ -37,9 +37,10 @@ Graph.prototype.isDirected = function() {
 
 Graph.prototype.hasLoops = function() {
   return this._E.some(function(edge) {
-    return edge._v1 !== edge._v2;
+    return edge._v1 === edge._v2;
   });
 }
+
 Graph.prototype.hasParallels = function() {
   var vertexCardinality = this._V.length;
   var adjacencymatrix = [];
@@ -141,3 +142,44 @@ Graph.prototype.unlooped = function() {
   });
   return new Graph(this._V, edges);
 }
+
+Graph.prototype.toString = function() {
+  return JSON.stringify(this._E);
+}
+
+var vertices = [
+  new Vertex('name1'),
+  new Vertex('name2'),
+  new Vertex('name3'),
+  new Vertex('name4'),
+  new Vertex('name5'),
+  new Vertex('name6')
+];
+
+var edges = [
+  new Edge({ v1: vertices[0], v2: vertices[1], weight: 3, directed: false }),
+  new Edge({ v1: vertices[3], v2: vertices[2], weight: 4, directed: false }),
+  new Edge({ v1: vertices[4], v2: vertices[5], weight: 5, directed: false }),
+  new Edge({ v1: vertices[4], v2: vertices[1], weight: 6, directed: false }),
+  new Edge({ v1: vertices[4], v2: vertices[3], weight: 7, directed: false }),
+  new Edge({ v1: vertices[3], v2: vertices[3], weight: 7, directed: false }),
+  new Edge({ v1: vertices[5], v2: vertices[3], weight: 8, directed: false }),
+  new Edge({ v1: vertices[5], v2: vertices[3], weight: 8, directed: false })
+];
+
+var test = new Graph(vertices, edges);
+
+console.log(test.toString());
+console.log(test.isWeighted());
+console.log(test.isDirected());
+console.log(test.hasLoops());
+console.log(test.hasParallels());
+
+console.log("*** unweighted ***");
+console.log(test.unweighted().toString());
+console.log("*** undirected ***");
+console.log(test.undirected().toString());
+console.log("*** unlooped ***");
+console.log(test.unlooped().toString());
+console.log("*** unparalleled ***");
+console.log(test.unparalleled().toString());
