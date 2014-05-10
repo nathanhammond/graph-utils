@@ -29,10 +29,18 @@ Graph.prototype.isWeighted = function() {
   });
 }
 
+Graph.prototype.isUnweighted = function() {
+  return !this.isWeighted();
+}
+
 Graph.prototype.isDirected = function() {
   return this._E.some(function(edge) {
     return edge._directed;
   });
+}
+
+Graph.prototype.isUndirected = function() {
+  return !this.isDirected();
 }
 
 Graph.prototype.hasLoops = function() {
@@ -68,7 +76,28 @@ Graph.prototype.hasParallels = function() {
   });
 }
 
-Graph.prototype.isConnected = function() {}
+Graph.prototype.isSpanning = function() {
+  var span = [];
+  this._E.forEach(function(edge) {
+    span[edge._v1._index] = true;
+    span[edge._v2._index] = true;
+  });
+
+  return span.length === this._V.length && span.every(function(elem) { return !!elem; });  
+}
+
+Graph.prototype.isConnected = function() {
+  if (this.isUndirected()) {
+    // Quick check, make sure that from/to spans all vertices.
+    if (!this.isSpanning()) { return false; }
+
+    // Depth first search, can start with any node.
+    
+
+  } else {
+    // Identify roots?
+  }
+}
 Graph.prototype.isWeaklyConnected = function() {}
 Graph.prototype.isTree = function() {}
 Graph.prototype.isPlanar = function() {}
