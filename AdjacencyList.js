@@ -22,6 +22,16 @@ function Graph(vertices, edges) {
 Graph.prototype.push = function() {}
 Graph.prototype.remove = function() {}
 
+Graph.prototype.sortEdges = function() {
+  this._E = this._E.sort(function(a, b) {
+    var from = a._v1._index - b._v1._index;
+    var to = a._v2._index - b._v2._index;
+    var result = (from !== 0 ? from : to);
+    return result;
+  });
+  return this;
+}
+
 /* INSPECT THE GRAPH */
 Graph.prototype.isWeighted = function() {
   return this._E.some(function(edge) {
@@ -77,31 +87,68 @@ Graph.prototype.hasParallels = function() {
 }
 
 Graph.prototype.isSpanning = function() {
-  var span = [];
+  var vertexCardinality = this._V.length;
+  var span = new Array(vertexCardinality);
   this._E.forEach(function(edge) {
     span[edge._v1._index] = true;
     span[edge._v2._index] = true;
   });
 
-  return span.length === this._V.length && span.every(function(elem) { return !!elem; });  
+  // Arrays initialized with a length don't guarantee full iteration.
+  var count = 0;
+  var truthy = span.every(function(elem) { count++; return !!elem; });
+
+  return count === vertexCardinality && truthy;
 }
 
 Graph.prototype.isConnected = function() {
+  // Quick check, make sure that from/to spans all vertices.
+  if (!this.isSpanning()) { return false; }
+
+  var vertexCardinality = this._V.length;
+  var span = new Array(vertexCardinality);
+
+  function traverse(neighbors, vertex, lookup) {
+    if (span[vertex]) { return; }
+
+    span[vertex] = true;
+    neighbors.forEach(function(vertex) {
+      traverse(lookup[vertex], vertex, lookup);
+    });
+  }
+
+  // Create a from-to lookup.
+  var lookup = [];
+  for (var i = 0; i < vertexCardinality; i++) {
+    lookup.push([]);
+  }
+
+  // Depth first search.
   if (this.isUndirected()) {
-    // Quick check, make sure that from/to spans all vertices.
-    if (!this.isSpanning()) { return false; }
+    // When setting up the lookup, make sure t goes both ways.
+    this._E.forEach(function(edge) {
+      lookup[edge._v1._index].push(edge._v2._index);
+      lookup[edge._v2._index].push(edge._v1._index);
+    });
 
-    // Depth first search, can start with any node.
-    
+    // Can start with any vertex.
+    traverse(lookup[0], 0, lookup);
 
+    // Arrays initialized with a length don't guarantee full iteration.
+    var count = 0;
+    var truthy = span.every(function(elem) { count++; return !!elem; });
+
+    return count === vertexCardinality && truthy;
   } else {
-    // Identify roots?
+    this._E.forEach(function(edge) {
+      lookup[edge._v1._index].push(edge._v2._index);
+    });
   }
 }
 Graph.prototype.isWeaklyConnected = function() {}
 Graph.prototype.isTree = function() {}
 Graph.prototype.isPlanar = function() {}
-
+Graph.prototype.hasCycles = function() {}
 
 /* TRANSFORM THE GRAPH */
 Graph.prototype.unparalleled = function() {
@@ -195,6 +242,14 @@ var edges = [
   new Edge({ v1: vertices[5], v2: vertices[3], weight: 8, directed: false }),
   new Edge({ v1: vertices[5], v2: vertices[3], weight: 8, directed: false })
 ];
+// var edges = [
+//   new Edge({ v1: vertices[0], v2: vertices[1], weight: 3, directed: false }),
+//   new Edge({ v1: vertices[0], v2: vertices[2], weight: 4, directed: false }),
+//   new Edge({ v1: vertices[1], v2: vertices[2], weight: 5, directed: false }),
+//   new Edge({ v1: vertices[3], v2: vertices[4], weight: 6, directed: false }),
+//   new Edge({ v1: vertices[3], v2: vertices[5], weight: 7, directed: false }),
+//   new Edge({ v1: vertices[4], v2: vertices[5], weight: 7, directed: false })
+// ];
 
 var test = new Graph(vertices, edges);
 
@@ -203,7 +258,10 @@ console.log(test.isWeighted());
 console.log(test.isDirected());
 console.log(test.hasLoops());
 console.log(test.hasParallels());
+console.log(test.isConnected());
 
+console.log("*** sorting ***");
+console.log(test.sortEdges().toString());
 console.log("*** unweighted ***");
 console.log(test.unweighted().toString());
 console.log("*** undirected ***");
