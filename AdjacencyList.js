@@ -95,13 +95,13 @@ Graph.prototype.isSpanning = function() {
   });
 
   // Arrays initialized with a length don't guarantee full iteration.
-  var count = 0;
-  var truthy = span.every(function(elem) { count++; return !!elem; });
+  var iterations = 0;
+  var truthy = span.every(function(elem) { iterations++; return !!elem; });
 
-  return count === vertexCardinality && truthy;
+  return iterations === vertexCardinality && truthy;
 }
 
-Graph.prototype.isConnected = function() {
+Graph.prototype.isStronglyConnected = function() {
   // Quick check, make sure that from/to spans all vertices.
   if (!this.isSpanning()) { return false; }
 
@@ -119,8 +119,10 @@ Graph.prototype.isConnected = function() {
 
   // Create a from-to lookup.
   var lookup = [];
+  var reverselookup = [];
   for (var i = 0; i < vertexCardinality; i++) {
     lookup.push([]);
+    reverselookup.push([]);
   }
 
   // Depth first search.
@@ -133,19 +135,48 @@ Graph.prototype.isConnected = function() {
 
     // Can start with any vertex.
     traverse(lookup[0], 0, lookup);
-
-    // Arrays initialized with a length don't guarantee full iteration.
-    var count = 0;
-    var truthy = span.every(function(elem) { count++; return !!elem; });
-
-    return count === vertexCardinality && truthy;
   } else {
     this._E.forEach(function(edge) {
+      // The outgoing edges from each vertex.
       lookup[edge._v1._index].push(edge._v2._index);
+      // The incoming edges to each vertex.
+      reverselookup[edge._v2._index].push(edge._v1._index);
     });
+
+    // Identify/count nodes with zero incoming.
+    var root;
+    var count = 0;
+    reverselookup.forEach(function(incoming, index) {
+      if (incoming.length === 0) {
+        root = index;
+        count++;
+      }
+    });
+
+    // We're not connected if more than one node has no incoming connections.
+    if (count > 1) { return false; }
+
+    // It might be a tree.
+    if (count === 1) {
+      traverse(lookup[root], root, lookup);
+    }
+
+    if (count === 0) {
+      traverse(lookup[0], 0, lookup);
+    }
   }
+
+  // Arrays initialized with a length don't guarantee full iteration.
+  var iterations = 0;
+  var truthy = span.every(function(elem) { iterations++; return !!elem; });
+
+  return iterations === vertexCardinality && truthy;
 }
-Graph.prototype.isWeaklyConnected = function() {}
+
+Graph.prototype.isWeaklyConnected = function() {
+  return this.undirected().isConnected();
+}
+
 Graph.prototype.isTree = function() {}
 Graph.prototype.isPlanar = function() {}
 Graph.prototype.hasCycles = function() {}
